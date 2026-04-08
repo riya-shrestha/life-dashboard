@@ -1,65 +1,141 @@
-import Image from "next/image";
+"use client";
 
-export default function Home() {
+import { useState, useEffect, useCallback } from "react";
+import { Card } from "@/components/ui/Card";
+import { ThemeToggle } from "@/components/layout/ThemeToggle";
+import { GreetingClock } from "@/components/widgets/GreetingClock";
+import { MorningBriefing } from "@/components/widgets/MorningBriefing";
+import { PomodoroTimer } from "@/components/widgets/PomodoroTimer";
+import { TodoList } from "@/components/widgets/TodoList";
+import { CalendarWidget } from "@/components/widgets/CalendarWidget";
+import { ProjectCards } from "@/components/widgets/ProjectCards";
+import { JobTracker } from "@/components/widgets/JobTracker";
+import { BackgroundPicker } from "@/components/widgets/BackgroundPicker";
+
+function getBackgroundStyle(bg: string, type: string): string | undefined {
+  if (type === "none" || bg === "none") return undefined;
+  if (type === "custom") return bg;
+  switch (bg) {
+    case "gradient-warm":
+      return "linear-gradient(135deg, #FAF8F5 0%, #E8D5C4 50%, #C9A99A 100%)";
+    case "gradient-sage":
+      return "linear-gradient(135deg, #E8F0E4 0%, #A8B5A2 50%, #7C8F73 100%)";
+    case "gradient-dusk":
+      return "linear-gradient(135deg, #F0E0E8 0%, #C9A0B8 50%, #8B6B80 100%)";
+    case "gradient-ocean":
+      return "linear-gradient(135deg, #E0EEF0 0%, #90B8C8 50%, #5A8898 100%)";
+    case "gradient-marble":
+      return "linear-gradient(135deg, #F5F2ED 0%, #D8D0C8 30%, #E8E0D8 60%, #C8C0B8 100%)";
+    default:
+      return undefined;
+  }
+}
+
+export default function Dashboard() {
+  const [background, setBackground] = useState("none");
+  const [bgType, setBgType] = useState<"preset" | "custom" | "none">("none");
+  const [settingsLoaded, setSettingsLoaded] = useState(false);
+
+  useEffect(() => {
+    fetch("/api/settings")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.settings) {
+          setBackground(data.settings.background_image || "none");
+          setBgType(data.settings.background_type || "none");
+        }
+        setSettingsLoaded(true);
+      });
+  }, []);
+
+  const handleBgChange = useCallback(
+    (bg: string, type: "preset" | "custom" | "none") => {
+      setBackground(bg);
+      setBgType(type);
+      fetch("/api/settings", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ background_image: bg, background_type: type }),
+      });
+    },
+    []
+  );
+
+  const bgStyle = getBackgroundStyle(background, bgType);
+  const isImage = bgType === "custom" && background.startsWith("data:");
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
+    <>
+      {/* Background layer */}
+      {bgStyle && (
+        <div className="fixed inset-0 -z-10">
+          {isImage ? (
+            <img
+              src={bgStyle}
+              alt=""
+              className="w-full h-full object-cover"
             />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+          ) : (
+            <div className="w-full h-full" style={{ background: bgStyle }} />
+          )}
+          <div
+            className="absolute inset-0"
+            style={{ backgroundColor: "var(--overlay-bg)", backdropFilter: "blur(2px)" }}
+          />
+        </div>
+      )}
+
+      {/* Theme toggle */}
+      <div className="fixed top-4 right-4 z-40">
+        <ThemeToggle />
+      </div>
+
+      {/* Dashboard grid */}
+      <main className="min-h-screen p-4 md:p-6 lg:p-8">
+        <div
+          className="grid gap-4 max-w-[1440px] mx-auto"
+          style={{
+            gridTemplateColumns: "repeat(4, 1fr)",
+            gridTemplateRows: "auto auto auto auto",
+          }}
+        >
+          {/* Row 1 */}
+          <Card className="col-span-4 sm:col-span-2 lg:col-span-1 min-h-[180px]">
+            <GreetingClock />
+          </Card>
+
+          <Card className="col-span-4 sm:col-span-2 lg:col-span-2 min-h-[180px]">
+            <MorningBriefing />
+          </Card>
+
+          <Card className="col-span-4 sm:col-span-2 lg:col-span-1 min-h-[180px]">
+            <PomodoroTimer />
+          </Card>
+
+          {/* Row 2+3 */}
+          <Card className="col-span-4 lg:col-span-2 min-h-[360px] lg:row-span-2">
+            <TodoList />
+          </Card>
+
+          <Card className="col-span-4 lg:col-span-2 min-h-[360px] lg:row-span-2">
+            <CalendarWidget />
+          </Card>
+
+          {/* Row 4 */}
+          <Card className="col-span-4 lg:col-span-2 min-h-[300px]">
+            <ProjectCards />
+          </Card>
+
+          <Card className="col-span-4 lg:col-span-2 min-h-[300px]">
+            <JobTracker />
+          </Card>
         </div>
       </main>
-    </div>
+
+      {/* Background picker */}
+      {settingsLoaded && (
+        <BackgroundPicker current={background} onChange={handleBgChange} />
+      )}
+    </>
   );
 }
