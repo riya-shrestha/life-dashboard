@@ -1,15 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 
-const PUBLIC_PATHS = ["/login", "/api/auth"];
-
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // Skip middleware for public paths, static assets, and API routes
+  // Only /login and /api/auth are public
   if (
-    PUBLIC_PATHS.some((p) => pathname.startsWith(p)) ||
+    pathname === "/login" ||
+    pathname === "/api/auth" ||
     pathname.startsWith("/_next") ||
-    pathname.startsWith("/api/") ||
     pathname === "/favicon.ico"
   ) {
     return NextResponse.next();
@@ -18,8 +16,11 @@ export function middleware(request: NextRequest) {
   const authCookie = request.cookies.get("dashboard-auth")?.value;
 
   if (!authCookie) {
-    const loginUrl = new URL("/login", request.url);
-    return NextResponse.redirect(loginUrl);
+    // API routes get 401, pages get redirected to login
+    if (pathname.startsWith("/api/")) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+    return NextResponse.redirect(new URL("/login", request.url));
   }
 
   return NextResponse.next();

@@ -11,10 +11,8 @@ Personal life database / dashboard — a single-page bento grid with todos, proj
 - pnpm package manager
 
 ## Database
-- **Neon project**: `spring-brook-56906158`
-- **Branch**: `br-little-darkness-aku120s4`
-- **Database**: `neondb`
-- **Tables**: job_applications (existing), todos, projects, briefing_summaries, user_settings
+- Neon PostgreSQL (connection via DATABASE_URL env var)
+- **Tables**: job_applications (existing), todos, projects, briefing_summaries, user_settings, calendar_events
 
 ## Design System
 - Light: warm whites (#FAF8F5), dark: warm blacks (#1A1816)
@@ -29,4 +27,4 @@ Personal life database / dashboard — a single-page bento grid with todos, proj
 ## Related
 - Daily job search task writes briefing summaries to `briefing_summaries` table
 - Google Calendar integration for calendar widget
-- Single-user app — no auth needed
+- Password-protected via middleware + auth cookie
