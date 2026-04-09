@@ -76,6 +76,99 @@ body {
   background: var(--text-muted);
 }
 
+/* ===== BRIEFING PROSE ===== */
+.briefing-prose {
+  font-size: 0.875rem;
+  line-height: 1.7;
+  color: var(--text);
+}
+.briefing-prose h1 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin: 1.5rem 0 0.5rem;
+}
+.briefing-prose h2 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin: 1.25rem 0 0.5rem;
+  color: var(--accent);
+}
+.briefing-prose h3 {
+  font-size: 0.95rem;
+  font-weight: 600;
+  margin: 1rem 0 0.4rem;
+}
+.briefing-prose h4 {
+  font-size: 0.875rem;
+  font-weight: 600;
+  margin: 0.75rem 0 0.25rem;
+}
+.briefing-prose p {
+  margin: 0.4rem 0;
+}
+.briefing-prose hr {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 1rem 0;
+}
+.briefing-prose strong {
+  font-weight: 600;
+  color: var(--text);
+}
+.briefing-prose a {
+  color: var(--accent);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.briefing-prose a:hover {
+  color: var(--accent-hover);
+}
+.briefing-prose ul, .briefing-prose ol {
+  padding-left: 1.25rem;
+  margin: 0.4rem 0;
+}
+.briefing-prose li {
+  margin: 0.2rem 0;
+}
+.briefing-prose blockquote {
+  border-left: 3px solid var(--accent-sage);
+  padding: 0.5rem 0.75rem;
+  margin: 0.75rem 0;
+  background: var(--bg-elevated);
+  border-radius: 0 8px 8px 0;
+  color: var(--text-muted);
+  font-style: italic;
+}
+.briefing-prose table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 0.5rem 0;
+  font-size: 0.8125rem;
+}
+.briefing-prose th {
+  text-align: left;
+  font-weight: 600;
+  padding: 0.4rem 0.5rem;
+  border-bottom: 2px solid var(--border);
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+.briefing-prose td {
+  padding: 0.35rem 0.5rem;
+  border-bottom: 1px solid var(--border);
+}
+.briefing-prose tr:last-child td {
+  border-bottom: none;
+}
+.briefing-prose code {
+  background: var(--bg-elevated);
+  padding: 0.15rem 0.35rem;
+  border-radius: 4px;
+  font-size: 0.8rem;
+}
+
 /* ===== ANIMATIONS ===== */
 @keyframes fade-in-up {
   from {

@@ -1,7 +1,9 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { Newspaper, ChevronDown, ChevronUp, ExternalLink, X, Maximize2 } from "lucide-react";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import { Badge } from "@/components/ui/Badge";
 import { formatDate } from "@/lib/utils";
 import type { BriefingSummary } from "@/types";
@@ -257,10 +259,12 @@ function BriefingModal({
           ))}
         </div>
 
-        {/* Full briefing content */}
+        {/* Full briefing content — rendered markdown */}
         <div className="flex-1 overflow-y-auto p-5">
-          <div className="prose-dashboard text-sm leading-relaxed whitespace-pre-wrap text-[var(--text)]">
-            {briefing.full_briefing}
+          <div className="briefing-prose">
+            <ReactMarkdown remarkPlugins={[remarkGfm]}>
+              {briefing.full_briefing!}
+            </ReactMarkdown>
           </div>
         </div>
       </div>
