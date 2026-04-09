@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { Newspaper, ChevronDown, ChevronUp, ExternalLink } from "lucide-react";
+import { useState, useEffect, useCallback } from "react";
+import { Newspaper, ChevronDown, ChevronUp, ExternalLink, X, Maximize2 } from "lucide-react";
 import { Badge } from "@/components/ui/Badge";
 import { formatDate } from "@/lib/utils";
 import type { BriefingSummary } from "@/types";
@@ -10,6 +10,7 @@ export function MorningBriefing() {
   const [briefing, setBriefing] = useState<BriefingSummary | null>(null);
   const [loading, setLoading] = useState(true);
   const [collapsed, setCollapsed] = useState(false);
+  const [modalOpen, setModalOpen] = useState(false);
 
   useEffect(() => {
     fetch("/api/briefing")
@@ -27,6 +28,16 @@ export function MorningBriefing() {
         }
       });
   }, []);
+
+  // Close modal on Escape
+  useEffect(() => {
+    if (!modalOpen) return;
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setModalOpen(false);
+    };
+    document.addEventListener("keydown", handler);
+    return () => document.removeEventListener("keydown", handler);
+  }, [modalOpen]);
 
   const toggleCollapse = () => {
     const next = !collapsed;
@@ -90,69 +101,169 @@ export function MorningBriefing() {
 
   // Expanded state
   return (
-    <div className="p-5 flex flex-col h-full">
-      <div className="flex items-center justify-between mb-3">
-        <div className="flex items-center gap-2">
-          <Newspaper size={14} className="text-[var(--accent)]" />
-          <h2 className="text-lg font-semibold tracking-tight">Morning Briefing</h2>
-          <span className="text-xs text-[var(--text-muted)]">
-            {formatDate(briefing.briefing_date)}
-          </span>
-        </div>
-        <button
-          onClick={toggleCollapse}
-          className="text-[var(--text-muted)] hover:text-[var(--text)] transition-colors"
-        >
-          <ChevronUp size={16} />
-        </button>
-      </div>
-
-      {/* Stats */}
-      <div className="flex gap-2 mb-3 flex-wrap">
-        <Badge className="bg-[var(--accent-sage)]/20 text-[var(--accent-sage)]">
-          {briefing.new_jobs_today} new today
-        </Badge>
-        <Badge className="bg-[var(--accent)]/10 text-[var(--accent)]">
-          {briefing.total_applied} total applied
-        </Badge>
-      </div>
-
-      {/* Summary */}
-      <p className="text-sm text-[var(--text-muted)] mb-3 leading-relaxed">
-        {briefing.summary}
-      </p>
-
-      {/* Top matches */}
-      {briefing.top_matches && briefing.top_matches.length > 0 && (
-        <div className="flex-1 min-h-0">
-          <p className="text-xs text-[var(--text-muted)] uppercase tracking-wider font-medium mb-2">
-            Top Matches
-          </p>
-          <div className="overflow-y-auto space-y-1">
-            {briefing.top_matches.map((match, i) => (
-              <div
-                key={i}
-                className="flex items-center justify-between py-1.5 px-2 rounded-lg hover:bg-[var(--bg-elevated)] transition-colors text-sm"
+    <>
+      <div className="p-5 flex flex-col h-full">
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-2">
+            <Newspaper size={14} className="text-[var(--accent)]" />
+            <h2 className="text-lg font-semibold tracking-tight">Morning Briefing</h2>
+            <span className="text-xs text-[var(--text-muted)]">
+              {formatDate(briefing.briefing_date)}
+            </span>
+          </div>
+          <div className="flex items-center gap-1">
+            {briefing.full_briefing && (
+              <button
+                onClick={() => setModalOpen(true)}
+                className="text-[var(--text-muted)] hover:text-[var(--text)] transition-colors p-1"
+                title="View full briefing"
               >
-                <div className="min-w-0">
-                  <p className="font-medium truncate">{match.title}</p>
-                  <p className="text-xs text-[var(--text-muted)]">{match.company}</p>
-                </div>
-                {match.link && (
-                  <a
-                    href={match.link}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="shrink-0 text-[var(--text-muted)] hover:text-[var(--accent)] ml-2"
-                  >
-                    <ExternalLink size={12} />
-                  </a>
-                )}
-              </div>
-            ))}
+                <Maximize2 size={14} />
+              </button>
+            )}
+            <button
+              onClick={toggleCollapse}
+              className="text-[var(--text-muted)] hover:text-[var(--text)] transition-colors p-1"
+            >
+              <ChevronUp size={16} />
+            </button>
           </div>
         </div>
+
+        {/* Stats */}
+        <div className="flex gap-2 mb-3 flex-wrap">
+          <Badge className="bg-[var(--accent-sage)]/20 text-[var(--accent-sage)]">
+            {briefing.new_jobs_today} new today
+          </Badge>
+          <Badge className="bg-[var(--accent)]/10 text-[var(--accent)]">
+            {briefing.total_applied} total applied
+          </Badge>
+        </div>
+
+        {/* Summary — clickable to open full briefing */}
+        <p
+          className={`text-sm text-[var(--text-muted)] mb-3 leading-relaxed ${
+            briefing.full_briefing ? "cursor-pointer hover:text-[var(--text)] transition-colors" : ""
+          }`}
+          onClick={briefing.full_briefing ? () => setModalOpen(true) : undefined}
+        >
+          {briefing.summary}
+          {briefing.full_briefing && (
+            <span className="text-xs text-[var(--accent)] ml-1">Read more</span>
+          )}
+        </p>
+
+        {/* Top matches */}
+        {briefing.top_matches && briefing.top_matches.length > 0 && (
+          <div className="flex-1 min-h-0">
+            <p className="text-xs text-[var(--text-muted)] uppercase tracking-wider font-medium mb-2">
+              Top Matches
+            </p>
+            <div className="overflow-y-auto space-y-1">
+              {briefing.top_matches.map((match, i) => (
+                <div
+                  key={i}
+                  className="flex items-center justify-between py-1.5 px-2 rounded-lg hover:bg-[var(--bg-elevated)] transition-colors text-sm"
+                >
+                  <div className="min-w-0">
+                    <p className="font-medium truncate">{match.title}</p>
+                    <p className="text-xs text-[var(--text-muted)]">{match.company}</p>
+                  </div>
+                  {match.link && (
+                    <a
+                      href={match.link}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="shrink-0 text-[var(--text-muted)] hover:text-[var(--accent)] ml-2"
+                    >
+                      <ExternalLink size={12} />
+                    </a>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Full briefing modal */}
+      {modalOpen && briefing.full_briefing && (
+        <BriefingModal
+          briefing={briefing}
+          onClose={() => setModalOpen(false)}
+        />
       )}
+    </>
+  );
+}
+
+function BriefingModal({
+  briefing,
+  onClose,
+}: {
+  briefing: BriefingSummary;
+  onClose: () => void;
+}) {
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      onClick={onClose}
+    >
+      {/* Backdrop */}
+      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
+
+      {/* Modal */}
+      <div
+        className="relative w-full max-w-3xl max-h-[85vh] rounded-2xl overflow-hidden flex flex-col"
+        style={{
+          backgroundColor: "var(--bg-card)",
+          boxShadow: "var(--card-shadow)",
+          border: "1px solid var(--border)",
+        }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Header */}
+        <div className="flex items-center justify-between p-5 border-b border-[var(--border)]">
+          <div className="flex items-center gap-2">
+            <Newspaper size={16} className="text-[var(--accent)]" />
+            <h2 className="text-lg font-semibold">Daily Job Search Report</h2>
+            <span className="text-xs text-[var(--text-muted)]">
+              {formatDate(briefing.briefing_date)}
+            </span>
+          </div>
+          <button
+            onClick={onClose}
+            className="text-[var(--text-muted)] hover:text-[var(--text)] transition-colors p-1 rounded-lg hover:bg-[var(--bg-elevated)]"
+          >
+            <X size={18} />
+          </button>
+        </div>
+
+        {/* Stats bar */}
+        <div className="flex gap-3 px-5 py-3 border-b border-[var(--border)] flex-wrap">
+          <Badge className="bg-[var(--accent-sage)]/20 text-[var(--accent-sage)]">
+            {briefing.new_jobs_today} new today
+          </Badge>
+          <Badge className="bg-[var(--accent-blush)]/20 text-[var(--accent-blush)]">
+            {briefing.new_jobs_week} this week
+          </Badge>
+          <Badge className="bg-[var(--accent)]/10 text-[var(--accent)]">
+            {briefing.total_applied} total applied
+          </Badge>
+          {briefing.app_stats && Object.entries(briefing.app_stats).map(([status, count]) => (
+            <Badge key={status} className="bg-[var(--bg-elevated)] text-[var(--text-muted)]">
+              {status}: {count}
+            </Badge>
+          ))}
+        </div>
+
+        {/* Full briefing content */}
+        <div className="flex-1 overflow-y-auto p-5">
+          <div className="prose-dashboard text-sm leading-relaxed whitespace-pre-wrap text-[var(--text)]">
+            {briefing.full_briefing}
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

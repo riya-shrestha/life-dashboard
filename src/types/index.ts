@@ -38,6 +38,7 @@ export interface BriefingSummary {
   id: number;
   briefing_date: string;
   summary: string;
+  full_briefing: string | null;
   new_jobs_today: number;
   new_jobs_week: number;
   total_applied: number;
