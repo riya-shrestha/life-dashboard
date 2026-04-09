@@ -4,7 +4,7 @@ import { NextResponse } from "next/server";
 export async function GET() {
   try {
     const [recent, stats] = await Promise.all([
-      sql`SELECT * FROM job_applications ORDER BY date_applied DESC, created_at DESC LIMIT 10`,
+      sql`SELECT * FROM job_applications ORDER BY date_applied DESC, created_at DESC`,
       sql`SELECT status, COUNT(*)::int as count FROM job_applications GROUP BY status`,
     ]);
 

@@ -16,6 +16,7 @@ export function JobTracker() {
   const [recent, setRecent] = useState<JobApplication[]>([]);
   const [stats, setStats] = useState<JobStats[]>([]);
   const [loading, setLoading] = useState(true);
+  const [activeFilter, setActiveFilter] = useState<string | null>(null);
 
   useEffect(() => {
     fetch("/api/jobs")
@@ -42,26 +43,48 @@ export function JobTracker() {
           <div className="h-6 w-full rounded bg-[var(--border)] animate-pulse" />
         ) : (
           <>
-            <Badge className="bg-[var(--accent)]/10 text-[var(--accent)]">
-              Total: {total}
-            </Badge>
+            <button onClick={() => setActiveFilter(null)}>
+              <Badge
+                className={`transition-all ${
+                  activeFilter === null
+                    ? "bg-[var(--accent)] text-white"
+                    : "bg-[var(--accent)]/10 text-[var(--accent)] hover:bg-[var(--accent)]/20"
+                }`}
+              >
+                Total: {total}
+              </Badge>
+            </button>
             {stats.map((s) => {
               const colors = STATUS_COLORS[s.status] || {
                 bg: "bg-[var(--border)]",
                 text: "text-[var(--text-muted)]",
               };
+              const isActive = activeFilter === s.status;
               return (
-                <Badge key={s.status} className={`${colors.bg} ${colors.text}`}>
-                  {s.status}: {s.count}
-                </Badge>
+                <button
+                  key={s.status}
+                  onClick={() =>
+                    setActiveFilter(isActive ? null : s.status)
+                  }
+                >
+                  <Badge
+                    className={`transition-all ${
+                      isActive
+                        ? `${colors.bg} ${colors.text} ring-1 ring-current`
+                        : `${colors.bg} ${colors.text} opacity-70 hover:opacity-100`
+                    }`}
+                  >
+                    {s.status}: {s.count}
+                  </Badge>
+                </button>
               );
             })}
           </>
         )}
       </div>
 
-      {/* Recent applications */}
-      <div className="flex-1 overflow-y-auto space-y-1 min-h-0">
+      {/* Applications list */}
+      <div className="flex-1 overflow-y-auto space-y-1 min-h-0 pr-1 -mr-1">
         {loading ? (
           <div className="space-y-2">
             {[...Array(4)].map((_, i) => (
@@ -73,7 +96,9 @@ export function JobTracker() {
             No applications tracked yet
           </p>
         ) : (
-          recent.map((job) => {
+          recent
+            .filter((job) => !activeFilter || job.status === activeFilter)
+            .map((job) => {
             const colors = STATUS_COLORS[job.status] || {
               bg: "bg-[var(--border)]",
               text: "text-[var(--text-muted)]",
