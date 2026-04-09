@@ -38,7 +38,11 @@ function groupByDate(events: CalendarEvent[]): GroupedEvents {
   return groups;
 }
 
-export function CalendarWidget() {
+interface CalendarWidgetProps {
+  refreshKey?: number;
+}
+
+export function CalendarWidget({ refreshKey = 0 }: CalendarWidgetProps) {
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [lastSynced, setLastSynced] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -51,7 +55,7 @@ export function CalendarWidget() {
         setLastSynced(data.lastSynced);
       })
       .finally(() => setLoading(false));
-  }, []);
+  }, [refreshKey]);
 
   const grouped = groupByDate(events);
   const sortedDates = Object.keys(grouped).sort();

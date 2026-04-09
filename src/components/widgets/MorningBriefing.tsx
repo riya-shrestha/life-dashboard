@@ -2,25 +2,33 @@
 
 import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
-import { Newspaper, ChevronDown, ChevronUp, ExternalLink, X, Maximize2 } from "lucide-react";
+import { Newspaper, ChevronDown, ChevronUp, ExternalLink, X, Maximize2, RefreshCw } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { Badge } from "@/components/ui/Badge";
 import { formatDate } from "@/lib/utils";
 import type { BriefingSummary } from "@/types";
 
-export function MorningBriefing() {
+interface MorningBriefingProps {
+  refreshKey?: number;
+  onRefresh?: () => void;
+}
+
+export function MorningBriefing({ refreshKey = 0, onRefresh }: MorningBriefingProps) {
   const [briefing, setBriefing] = useState<BriefingSummary | null>(null);
   const [loading, setLoading] = useState(true);
   const [collapsed, setCollapsed] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
+    if (refreshKey > 0) setRefreshing(true);
     fetch("/api/briefing")
       .then((res) => res.json())
       .then((data) => {
         setBriefing(data.briefing);
         setLoading(false);
+        setRefreshing(false);
 
         // Auto-collapse if already read today
         if (data.briefing) {
@@ -30,7 +38,7 @@ export function MorningBriefing() {
           }
         }
       });
-  }, []);
+  }, [refreshKey]);
 
   // Close modal on Escape
   useEffect(() => {
@@ -77,12 +85,23 @@ export function MorningBriefing() {
             </Badge>
           )}
         </div>
-        <button
-          onClick={toggleCollapse}
-          className="text-[var(--text-muted)] hover:text-[var(--text)] transition-colors"
-        >
-          <ChevronDown size={16} />
-        </button>
+        <div className="flex items-center gap-1">
+          {onRefresh && (
+            <button
+              onClick={onRefresh}
+              className="text-[var(--text-muted)] hover:text-[var(--text)] transition-colors p-1"
+              title="Refresh briefing & calendar"
+            >
+              <RefreshCw size={14} className={refreshing ? "animate-spin" : ""} />
+            </button>
+          )}
+          <button
+            onClick={toggleCollapse}
+            className="text-[var(--text-muted)] hover:text-[var(--text)] transition-colors"
+          >
+            <ChevronDown size={16} />
+          </button>
+        </div>
       </div>
     );
   }
@@ -96,7 +115,7 @@ export function MorningBriefing() {
           No briefing yet today
         </p>
         <p className="text-xs text-[var(--text-muted)] mt-1">
-          Your daily search runs at 7:08 AM
+          Your daily search runs at 9:00 AM
         </p>
       </div>
     );
@@ -115,6 +134,15 @@ export function MorningBriefing() {
             </span>
           </div>
           <div className="flex items-center gap-1">
+            {onRefresh && (
+              <button
+                onClick={onRefresh}
+                className="text-[var(--text-muted)] hover:text-[var(--text)] transition-colors p-1"
+                title="Refresh briefing & calendar"
+              >
+                <RefreshCw size={14} className={refreshing ? "animate-spin" : ""} />
+              </button>
+            )}
             {briefing.full_briefing && (
               <button
                 onClick={() => setModalOpen(true)}

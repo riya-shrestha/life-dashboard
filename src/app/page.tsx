@@ -35,6 +35,11 @@ export default function Dashboard() {
   const [background, setBackground] = useState("none");
   const [bgType, setBgType] = useState<"preset" | "custom" | "none">("none");
   const [settingsLoaded, setSettingsLoaded] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  const handleRefresh = useCallback(() => {
+    setRefreshKey((k) => k + 1);
+  }, []);
 
   useEffect(() => {
     fetch("/api/settings")
@@ -105,7 +110,7 @@ export default function Dashboard() {
           </Card>
 
           <Card className="col-span-4 sm:col-span-2 lg:col-span-2 min-h-[180px]">
-            <MorningBriefing />
+            <MorningBriefing refreshKey={refreshKey} onRefresh={handleRefresh} />
           </Card>
 
           <Card className="col-span-4 sm:col-span-2 lg:col-span-1 min-h-[180px]">
@@ -118,7 +123,7 @@ export default function Dashboard() {
           </Card>
 
           <Card className="col-span-4 lg:col-span-2 min-h-[360px] lg:row-span-2">
-            <CalendarWidget />
+            <CalendarWidget refreshKey={refreshKey} />
           </Card>
 
           {/* Row 4 */}
