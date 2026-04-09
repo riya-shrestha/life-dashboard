@@ -19,16 +19,49 @@ interface PomodoroConfig {
   sessionsBeforeLong?: number;
 }
 
+const STORAGE_KEY = "pomodoro_state";
+
+function loadSavedState(config: PomodoroConfig): PomodoroState {
+  if (typeof window === "undefined") {
+    return { phase: "idle", timeRemaining: config.workMin * 60, isRunning: false, sessionCount: 0, totalCompleted: 0 };
+  }
+  try {
+    const raw = sessionStorage.getItem(STORAGE_KEY);
+    if (!raw) return { phase: "idle", timeRemaining: config.workMin * 60, isRunning: false, sessionCount: 0, totalCompleted: 0 };
+    const saved = JSON.parse(raw);
+    const elapsed = Math.floor((Date.now() - (saved.savedAt || Date.now())) / 1000);
+    let timeRemaining = saved.timeRemaining;
+    let isRunning = saved.isRunning;
+
+    // If timer was running, subtract elapsed time
+    if (isRunning && elapsed > 0) {
+      timeRemaining = Math.max(0, timeRemaining - elapsed);
+      if (timeRemaining === 0) isRunning = false;
+    }
+
+    return {
+      phase: saved.phase || "idle",
+      timeRemaining,
+      isRunning,
+      sessionCount: saved.sessionCount || 0,
+      totalCompleted: saved.totalCompleted || 0,
+    };
+  } catch {
+    return { phase: "idle", timeRemaining: config.workMin * 60, isRunning: false, sessionCount: 0, totalCompleted: 0 };
+  }
+}
+
+function saveState(state: PomodoroState) {
+  if (typeof window === "undefined") return;
+  try {
+    sessionStorage.setItem(STORAGE_KEY, JSON.stringify({ ...state, savedAt: Date.now() }));
+  } catch { /* ignore quota errors */ }
+}
+
 export function usePomodoro(config: PomodoroConfig) {
   const sessionsBeforeLong = config.sessionsBeforeLong ?? 4;
 
-  const [state, setState] = useState<PomodoroState>({
-    phase: "idle",
-    timeRemaining: config.workMin * 60,
-    isRunning: false,
-    sessionCount: 0,
-    totalCompleted: 0,
-  });
+  const [state, setState] = useState<PomodoroState>(() => loadSavedState(config));
 
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -78,6 +111,11 @@ export function usePomodoro(config: PomodoroConfig) {
     [config, sessionsBeforeLong, notify]
   );
 
+  // Persist state to sessionStorage on every change
+  useEffect(() => {
+    saveState(state);
+  }, [state]);
+
   useEffect(() => {
     if (!state.isRunning) {
       clearTimer();
@@ -115,6 +153,7 @@ export function usePomodoro(config: PomodoroConfig) {
 
   const reset = useCallback(() => {
     clearTimer();
+    sessionStorage.removeItem(STORAGE_KEY);
     setState({
       phase: "idle",
       timeRemaining: config.workMin * 60,
