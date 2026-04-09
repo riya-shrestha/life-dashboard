@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { Newspaper, ChevronDown, ChevronUp, ExternalLink, X, Maximize2 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -188,12 +189,13 @@ export function MorningBriefing() {
         )}
       </div>
 
-      {/* Full briefing modal */}
-      {modalOpen && briefing.full_briefing && (
+      {/* Full briefing modal — portaled to body to escape card stacking context */}
+      {modalOpen && briefing.full_briefing && createPortal(
         <BriefingModal
           briefing={briefing}
           onClose={() => setModalOpen(false)}
-        />
+        />,
+        document.body
       )}
     </>
   );
@@ -228,7 +230,7 @@ function BriefingModal({
         <div className="flex items-center justify-between p-5 border-b border-[var(--border)]">
           <div className="flex items-center gap-2">
             <Newspaper size={16} className="text-[var(--accent)]" />
-            <h2 className="text-lg font-semibold">Daily Job Search Report</h2>
+            <h2 className="text-lg font-semibold">Morning Briefing</h2>
             <span className="text-xs text-[var(--text-muted)]">
               {formatDate(briefing.briefing_date)}
             </span>
