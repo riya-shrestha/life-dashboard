@@ -131,7 +131,7 @@ export default function Dashboard() {
             <ProjectCards />
           </Card>
 
-          <Card className="col-span-4 lg:col-span-2 min-h-[300px]">
+          <Card className="col-span-4 lg:col-span-2 min-h-[300px] max-h-[480px]">
             <JobTracker />
           </Card>
         </div>
