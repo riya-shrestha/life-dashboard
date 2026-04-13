@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Briefcase, ExternalLink } from "lucide-react";
+import { Briefcase, ExternalLink, Search } from "lucide-react";
 import { Badge } from "@/components/ui/Badge";
 import { STATUS_COLORS } from "@/lib/constants";
 import { formatDate } from "@/lib/utils";
@@ -17,6 +17,7 @@ export function JobTracker() {
   const [stats, setStats] = useState<JobStats[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeFilter, setActiveFilter] = useState<string | null>(null);
+  const [search, setSearch] = useState("");
 
   useEffect(() => {
     fetch("/api/jobs")
@@ -83,6 +84,20 @@ export function JobTracker() {
         )}
       </div>
 
+      {/* Search */}
+      <div className="relative mb-3">
+        <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[var(--text-muted)]" />
+        <input
+          type="text"
+          placeholder="Search jobs..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="w-full pl-8 pr-3 py-1.5 text-sm rounded-lg border border-[var(--border)] bg-transparent
+            placeholder:text-[var(--text-muted)] focus:outline-none focus:border-[var(--accent)]
+            transition-colors"
+        />
+      </div>
+
       {/* Applications list */}
       <div className="flex-1 overflow-y-auto space-y-1 min-h-0 pr-1 -mr-1">
         {loading ? (
@@ -98,6 +113,15 @@ export function JobTracker() {
         ) : (
           recent
             .filter((job) => !activeFilter || job.status === activeFilter)
+            .filter((job) => {
+              if (!search) return true;
+              const q = search.toLowerCase();
+              return (
+                job.job_title.toLowerCase().includes(q) ||
+                job.company.toLowerCase().includes(q) ||
+                (job.source && job.source.toLowerCase().includes(q))
+              );
+            })
             .map((job) => {
             const colors = STATUS_COLORS[job.status] || {
               bg: "bg-[var(--border)]",
